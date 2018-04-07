@@ -9,110 +9,101 @@
 import UIKit
 
 class ViewController: UIViewController {
-
-
-    @IBOutlet weak var word: UILabel!
-    @IBOutlet weak var letterField: UITextField!
-    @IBOutlet weak var guessButton: UIButton!
-    @IBOutlet weak var numGuesses: UILabel!
-    @IBOutlet weak var playAgain: UIButton!
-    @IBOutlet weak var flowerImage: UIImageView!
+    
+    
+    @IBOutlet weak var userGuessLabel: UILabel!
+    @IBOutlet weak var guessedLetterField: UITextField!
+    @IBOutlet weak var guessLetterButton: UIButton!
+    @IBOutlet weak var guessCountLabel: UILabel!
+    @IBOutlet weak var playAgainButton: UIButton!
+    @IBOutlet weak var flowerImageView: UIImageView!
     var wordToGuess = "SWIFT"
     var lettersGuessed = ""
-    let maxWrongGuesses = 8
-    var wrongGuesses = 8
-    var numGuessVar = 0
+    let maxNumberOfWrongGuesses = 8
+    var wrongGuessesRemaining = 8
+    var guessCount = 0
     override func viewDidLoad() {
-        startDashes()
         super.viewDidLoad()
-        guessButton.isEnabled = false
-        playAgain.isEnabled = false
+        formatUserGuessLabel()
+        guessLetterButton.isEnabled = false
+        playAgainButton.isHidden = true
     }
-    func startDashes() {
+    func updateUIAfterGuess() {
+        guessedLetterField.resignFirstResponder()
+        guessedLetterField.text = ""
+    }
+    func formatUserGuessLabel() {
         var revealedWord = ""
-        lettersGuessed += letterField.text!
-        
+        lettersGuessed += guessedLetterField.text!
         for letter in wordToGuess {
-        if lettersGuessed.contains(letter) {
-        revealedWord = revealedWord + " \(letter)"
-        word.text = revealedWord
-        } else {
-        revealedWord += " _"
-        word.text = revealedWord
+            if lettersGuessed.contains(letter) {
+                revealedWord = revealedWord + " \(letter)"
+            } else {
+                revealedWord = revealedWord + " _"
             }
         }
-        print(revealedWord)
+        revealedWord.removeFirst()
+        userGuessLabel.text = revealedWord
     }
-
-    func guessLetter() {
-        startDashes()
+    func guessALetter() {
+        formatUserGuessLabel()
+        guessCount += 1
         
-        let currentLetterGuessed = letterField.text!
-        //Decrements the wrong guesses remaining and shows the next flower image with one less petle
+        //Changes image upon wrong guesses
+        let currentLetterGuessed = guessedLetterField.text!
         if !wordToGuess.contains(currentLetterGuessed) {
-            wrongGuesses = wrongGuesses - 1
-            flowerImage.image = UIImage(named: "flower"+"\(wrongGuesses)")
+            wrongGuessesRemaining = wrongGuessesRemaining - 1
+            flowerImageView.image = UIImage(named: "flower\(wrongGuessesRemaining)")
         }
-        
-        let revealedWord = word.text!
-        
-        //Stop Game if no more wrong guesses remaining
-        if wrongGuesses == 0 {
-            playAgain.isEnabled = true
-            letterField.isEnabled = false
-            guessButton.isEnabled = false
-            numGuesses.text = "You Lost :("
-            
-        } else if !revealedWord.contains("_") {
-            numGuesses.text = "You Win :)"
-            
-            playAgain.isEnabled = false
-            letterField.isEnabled = false
-            guessButton.isEnabled = false
+        let revealedWord = userGuessLabel.text!
+        //stops game if guesses remaaining = 0
+        if wrongGuessesRemaining == 0 {
+            playAgainButton.isHidden = false
+            guessLetterButton.isEnabled = false
+            guessedLetterField.isEnabled = false
+            guessCountLabel.text = "Out Of Guesses. Game Over, Try Again?"
+        } else if !revealedWord.contains("_"){
+            // You've Won A Game
+            playAgainButton.isHidden = false
+            guessLetterButton.isEnabled = false
+            guessedLetterField.isEnabled = false
+            guessCountLabel.text = "You Won. It Took You \(guessCount) Guesses"
         } else {
-            let guess = ( numGuessVar == 1 ? "Guess" : "Guesses")
-            numGuesses.text = "You've Made \(numGuessVar) \(guess)"
-            numGuessVar = numGuessVar + 1
-            }
-        }
-    
-    func updateUIAfterGuess () {
-        letterField.resignFirstResponder()
-        letterField.text = ""
-    }
-    
-    
-    @IBAction func letterFieldChanged(_ sender: UITextField) {
-        if let letterGuessed = letterField.text?.last {
-            letterField.text = "\(letterGuessed)"
-            guessButton.isEnabled = true
-        } else {
-            guessButton.isEnabled = false
+            //Update our guess count
+            let guess = (guessCount == 1 ? "Guess" : "Guesses")
+            guessCountLabel.text = "You've Made \(guessCount) \(guess)"
         }
     }
- 
+    @IBAction func guessedLetterFieldChange(_ sender: UITextField) {
+        if let letterGuessed = guessedLetterField.text?.last {
+            guessedLetterField.text = "\(letterGuessed)"
+            guessLetterButton.isEnabled = true
+        }else {
+            //disable the button if I don't have a single character in the guess letter field
+            guessLetterButton.isEnabled = false
+        }
+    }
     @IBAction func doneKeyPressed(_ sender: UITextField) {
-        guessLetter()
+        guessALetter()
         updateUIAfterGuess()
         
     }
     
-    @IBAction func guessButtonPressed(_ sender: UIButton) {
+    @IBAction func guessLetterButtonPressed(_ sender: UIButton) {
+        guessALetter()
         updateUIAfterGuess()
+        
     }
-    
-    @IBAction func playAgainPressed(_ sender: UIButton) {
-        playAgain.isHidden = true
-        letterField.isEnabled = true
-        guessButton.isEnabled = true
-        flowerImage.image = UIImage(named: "flower8")
-        wrongGuesses = maxWrongGuesses
+    @IBAction func playAgainButtonPressed(_ sender: UIButton) {
+        playAgainButton.isHidden = true
+        guessLetterButton.isEnabled = false
+        guessedLetterField.isEnabled = true
+        flowerImageView.image = UIImage(named: "flower8")
+        wrongGuessesRemaining = maxNumberOfWrongGuesses
         lettersGuessed = ""
-        startDashes()
-        numGuessVar = 0
-        numGuesses.text = "You've Made 0 Guesses"
+        formatUserGuessLabel()
+        guessCountLabel.text = "You've Made 0 Guesses"
+        guessCount = 0
     }
-}
     
-
-
+}
